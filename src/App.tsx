@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import axios from "axios";
 
@@ -9,31 +9,32 @@ interface Pokemon {
 }
 
 function App() {
-  const [searchValue, setSearchValue] = useState();
-  const [pokemon, setPokemon] = useState({} as Pokemon);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [pokemon, setPokemon] = useState<Pokemon>({} as Pokemon);
+  const debouncedGetPokemon = useRef<number>()
+  
+  const searchPokemon = useCallback(pokemon => {
+    clearTimeout(debouncedGetPokemon.current)
 
-  const onTextChange = ({ target }) => setSearchValue(target.value);
+    debouncedGetPokemon.current = setTimeout(async () => {
+      if (!pokemon) return
 
-  useEffect(() => {
-    const getByPokemonName = async (pokeName) => {
-      const { data } = await axios.get(
-        `https://pokeapi.co/api/v2/pokemon/${pokeName}`
-      );
+      try {
+        const { data } = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemon}`)
+        const { id, name, sprites } = data
+  
+        setPokemon({
+          id,
+          name,
+          url: sprites.front_default
+        }) 
+      } catch (error) { }
+    }, 1000)
+  }, [])
 
-      setPokemon({
-        id: data.id,
-        name: data.name,
-        url: data.sprites.front_default,
-      });
-    };
+  const hanldeTextChange = (event) => setSearchValue(event.target.value)
 
-    if (!searchValue) {
-      getByPokemonName("ditto");
-      return;
-    }
-
-    getByPokemonName(searchValue);
-  }, [searchValue]);
+  useEffect(() => searchPokemon(searchValue), [searchValue]);
 
   return (
     <div>
@@ -41,7 +42,7 @@ function App() {
         type="text"
         placeholder="search a pokemon"
         value={searchValue}
-        onChange={onTextChange}
+        onChange={hanldeTextChange}
       />
 
       <h1>{pokemon.id}</h1>
