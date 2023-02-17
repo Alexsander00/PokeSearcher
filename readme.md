@@ -1,2 +1,5 @@
- Este es un proyecto en conjunto con mi primo para parender react, viva los papus...
+ # PokeSearch
  
+ ## Motivations
+ This project was created with my cousing to learn more about React and teach him how to use **Git**
+ viva los papus...
